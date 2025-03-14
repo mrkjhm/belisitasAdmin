@@ -1,0 +1,43 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 4%;
+    height: 80px;
+}
+
+.logo {
+  width: max(10%, 80px);
+  display: block; 
+}
+
+
+.logo-container {
+  display: inline-block; 
+}
+
+  
+.navbar .user-icon {
+    width: 40px;
+  }
+
+.navbar button{
+  background-color: transparent;
+  font-size: 16px;
+  color: #49557e;
+  border: 1px solid #cacaca;
+  padding: 5px 30px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.navbar button:hover {
+  background-color: #eeeeee;
+}
+
+.navbar .buttons {
+
+  display: flex;
+  gap: 20px
+} 

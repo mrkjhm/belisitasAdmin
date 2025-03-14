@@ -1,0 +1,114 @@
+.add {
+    width: 70%;
+    margin-left: max(5vw, 25px);
+    margin-top: 50px;
+    color: #6d6d6d;
+    font-size: 16px;
+}
+
+.add form {
+    gap: 20px;
+}
+
+.upload-label {
+    display: inline-flex; /* Ensures the label only wraps around the image */
+    width: fit-content; /* Prevents extra whitespace */
+    cursor: pointer;
+}
+
+.upload-label img {
+    display: block; /* Prevents inline spacing issues */
+}
+
+.add-img-upload img {
+    width: 120px;
+}
+
+
+.add-product-name, .add-product-description {
+    width: max(49%, 280px);
+}
+
+.add-product-name input, .add-product-description textarea {
+    padding: 10px;
+    border: 1px solid rgb(68, 56, 56);
+}
+
+.add-category-price{
+    display: flex;
+    gap: 10px;
+}
+
+.add-category-price select {
+    max-width: 200px;
+    padding: 10px;
+    border: 1px solid rgb(68, 56, 56)
+}
+
+.add-category-price input {
+    max-width: 120px;
+    padding: 10px;
+    border: 1px solid rgb(68, 56, 56)
+}
+
+.add-btn {
+    max-width: 120px;
+    padding: 10px;
+    background-color: #eeeeee;
+
+    cursor: pointer;
+}
+
+.image-preview {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.image-container img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 1px;
+    right: 5px;
+
+
+    border: none;
+   
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+
+
+.replace-input {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    opacity: 0;
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+}
+
+
+
+@media (max-width:900px) {
+    .add-category-price input {
+        max-width: 100px;
+        padding: 10px;
+        border: 1px solid rgb(68, 56, 56)
+    }
+}
