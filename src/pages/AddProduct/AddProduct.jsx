@@ -3,9 +3,7 @@ import { assets } from '../../assets/assets';
 import axios from 'axios';
 import './AddProduct.css';
 import { toast } from 'react-toastify';
-import { DndContext, closestCenter } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
-import { CSS } from '@dnd-kit/utilities';
+
 
 export default function AddProduct({ url }) {
     const [images, setImages] = useState([]);
@@ -103,16 +101,7 @@ export default function AddProduct({ url }) {
     };
 
     // Handle drag end event
-    const onDragEnd = (event) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
 
-        setImages((items) => {
-            const oldIndex = items.indexOf(active.id);
-            const newIndex = items.indexOf(over.id);
-            return arrayMove(items, oldIndex, newIndex);
-        });
-    };
 
     // Handle form submission
     const onSubmitHandler = async (event) => {
@@ -190,15 +179,22 @@ export default function AddProduct({ url }) {
                         hidden
                     />
 
-                    <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                        <SortableContext items={images} strategy={verticalListSortingStrategy}>
-                            <div className="image-preview flex gap-5">
-                                {images.map((img, index) => (
-                                    <SortableItem key={img} id={img} img={img} index={index} removeImage={removeImage} />
-                                ))}
+
+                    <div className="image-preview flex gap-5">
+                        {images.map((img, index) => (
+                            <div key={img} className="image-container">
+                                <img src={img} alt="preview" />
+                                <button
+                                    type="button"
+                                    className="remove-btn"
+                                    onClick={() => removeImage(index)}
+                                >
+                                    <i className="ri-close-circle-fill"></i>
+                                </button>
                             </div>
-                        </SortableContext>
-                    </DndContext>
+                        ))}
+                    </div>
+
                 </div>
 
                 <div className="add-product-name flex-col">
@@ -244,88 +240,3 @@ export default function AddProduct({ url }) {
     );
 }
 
-function SortableItem({ id, img, index, removeImage }) {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
-
-    return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="image-container">
-            <img src={img} alt="preview" />
-
-            <button
-                type="button"
-                className="remove-btn"
-                onClick={(event) => {
-                    event.stopPropagation();
-                    removeImage(index);
-                }}
-            >
-                <i className="ri-close-circle-fill"></i>
-            </button>
-        </div>
-    );
-}
-
-
-/*
-
-import { useState } from "react";
-
-const UploadProduct = () => {
-    const [image, setImage] = useState(null);
-    const [preview, setPreview] = useState("");
-    const [message, setMessage] = useState("");
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
-            setPreview(URL.createObjectURL(file)); // Show image preview
-        }
-    };
-
-    const handleUpload = async () => {
-        if (!image) return alert("Please select an image!");
-
-        const formData = new FormData();
-        formData.append("images", image); // Must match your backend field name
-
-        try {
-            const response = await fetch("http://localhost:4000/products/add", {
-                method: "POST",
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`// Include auth token if needed
-                },
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setMessage("Product uploaded successfully!");
-                console.log("Uploaded Product:", data);
-            } else {
-                setMessage(data.message || "Upload failed!");
-            }
-        } catch (error) {
-            console.error("Upload error:", error);
-            setMessage("Error uploading file!");
-        }
-    };
-
-    return (
-        <div>
-            <input type="file" accept="image/!*" onChange={handleImageChange} />
-            {preview && <img src={preview} alt="Preview" style={{ width: 200 }} />}
-            <button onClick={handleUpload}>Upload</button>
-            {message && <p>{message}</p>}
-        </div>
-    );
-};
-
-export default UploadProduct;
-*/
