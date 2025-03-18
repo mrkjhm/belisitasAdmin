@@ -69,17 +69,19 @@ export default function EditProduct({ url }) {
 
 
     // Handle deleting an existing image
-    const handleDeleteImage = async (imageIndex) => {
+    const handleDeleteImage = async (imageUrl) => {
         try {
             const response = await axios.delete(`${url}/products/deleteImage/${id}`, {
-                data: { imageIndex },
+                data: { imageUrl },
             });
 
             if (response.data.success) {
                 toast.success("Image deleted successfully");
+
+                // Update state by filtering out the deleted image
                 setProduct((prevProduct) => ({
                     ...prevProduct,
-                    images: prevProduct.images.filter((_, index) => index !== imageIndex),
+                    images: prevProduct.images.filter((img) => img !== imageUrl),
                 }));
             } else {
                 toast.error("Failed to delete image");
@@ -89,6 +91,7 @@ export default function EditProduct({ url }) {
             console.error(error);
         }
     };
+
 
     // Submit form
     // const handleSubmit = async (e) => {
@@ -176,14 +179,14 @@ export default function EditProduct({ url }) {
                 <div className="image-preview-1">
                     <p className="mb-3">Current Images:</p>
                     <div className="image-grid flex gap-2">
-                        {/* Existing images from server */}
-                        {product.images.map((image, index) => (
+                        {/* Existing images from Cloudinary */}
+                        {product.images.map((imageUrl, index) => (
                             <div key={index} className="image-container">
-                                <img src={`${url}/images/${image}`} alt="product" className="product-image" />
+                                <img src={imageUrl} alt="product" className="product-image" />
                                 <button
                                     type="button"
                                     className="delete-image-btn"
-                                    onClick={() => handleDeleteImage(index)}
+                                    onClick={() => handleDeleteImage(imageUrl, index)}
                                 >
                                     <i className="ri-close-circle-fill"></i>
                                 </button>

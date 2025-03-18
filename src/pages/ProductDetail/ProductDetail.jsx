@@ -19,7 +19,8 @@ export default function ProductDetails({ url }) {
                 const response = await axios.get(`${url}/products/${id}`);
                 if (response.data.success) {
                     setProduct(response.data.data);
-                    setSelectedImage(`${url}/images/${response.data.data.images[0]}`); // Set first image as default
+                    // Directly set the first Cloudinary image as default
+                    setSelectedImage(response.data.data.images[0]);
                 } else {
                     toast.error("Product not found");
                 }
@@ -34,6 +35,7 @@ export default function ProductDetails({ url }) {
         fetchProduct();
     }, [id, url]);
 
+
     const handleDelete = () => {
         navigate('/list');
     };
@@ -44,43 +46,40 @@ export default function ProductDetails({ url }) {
 
     return (
         <>
-        <div className="product-detail grid md:grid-cols-2  grid-cols-1 gap-10">
-            <div>
-                {/* Large Main Image */}
-                <div className="main-image">
-                    <img src={selectedImage} alt={product.name} className="large-image" />
+            <div className="product-detail grid md:grid-cols-2 grid-cols-1 gap-10">
+                <div>
+                    {/* Large Main Image */}
+                    <div className="main-image">
+                        <img src={selectedImage} alt={product.name} className="large-image" />
+                    </div>
+
+                    {/* Small Thumbnail Images (Hide Active Image) */}
+                    {/* Small Thumbnail Images (Hide Active Image) */}
+                    <div className="thumbnail-gallery">
+                        {product.images
+                            .filter(image => image !== selectedImage) // Exclude active image
+                            .map((image, index) => (
+                                <img
+                                    key={index}
+                                    src={image} // Use Cloudinary URL directly
+                                    alt={`Thumbnail ${index + 1}`}
+                                    className="thumbnail"
+                                    onClick={() => setSelectedImage(image)}
+                                />
+                            ))}
+                    </div>
+
                 </div>
 
-                {/* Small Thumbnail Images (Hide Active Image) */}
-                <div className="thumbnail-gallery">
-                    {product.images
-                        .filter(image => `${url}/images/${image}` !== selectedImage) // Exclude active image
-                        .map((image, index) => (
-                            <img
-                                key={index}
-                                src={`${url}/images/${image}`}
-                                alt={`Thumbnail ${index + 1}`}
-                                className="thumbnail"
-                                onClick={() => setSelectedImage(`${url}/images/${image}`)}
-                            />
-                        ))}
+                <div className='text-detail space-y-3'>
+                    <h1 className='font-bold text-5xl'>{product.name}</h1>
+                    <p className='text-xl'>Description: {product.description}</p>
+                    <p className='font-bold text-2xl'>₱ {product.price}</p>
+                    <p>Category: {product.category}</p>
+
+                    <DeleteButton id={product._id} name={product.name} url={url} onDelete={handleDelete} />
                 </div>
             </div>
-
-            
-
-            <div className='text-detail space-y-3'>
-                <h1 className='font-bold text-5xl'>{product.name}</h1>
-                <p className='text-xl'>Description: {product.description}</p>
-                <p className='font-bold text-2xl'>Price: ₱ {product.price}</p>
-                <p>Category: {product.category}</p>
-
-                {/* <button className='bg-blue-500 py-2 px-5 rounded-md text-white me-3'>Update</button> */}
-                <DeleteButton id={product._id} name={product.name} url={url} onDelete={handleDelete} />
-            </div>
-        </div>
-     
-      
-      </>
+        </>
     );
 }

@@ -149,8 +149,13 @@ export default function ProductList({ url }) {
                 {filteredList.length > 0 ? (
                     filteredList.map((item, index) => (
                         <div key={index} className="image-gallery list-table-format hover:bg-[#ececec]">
-                            {item.images.length > 0 && (
-                                <img src={`${url}/images/${item.images[0]}`} alt={`Product ${index + 1}`} />
+                            {item.images?.length > 0 && (
+                                <img
+                                    src={item.images[0]}
+                                    alt={item.name}
+                                    className="product-image"
+                                    onError={(e) => (e.target.style.display = 'none')}
+                                />
                             )}
                             <p className="cursor-pointer hover:font-semibold" onClick={() => navigate(`/product/${item._id}`)}>
                                 {item.name}

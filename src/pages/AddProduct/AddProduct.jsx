@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { assets } from '../../assets/assets';
 import axios from 'axios';
 import './AddProduct.css';
 import { toast } from 'react-toastify';
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from '@dnd-kit/utilities';
 
 export default function AddProduct({ url }) {
-
-
-    const [forceUpdate, setForceUpdate] = useState(0);
     const [images, setImages] = useState([]);
     const [data, setData] = useState({
         name: "",
@@ -20,7 +17,8 @@ export default function AddProduct({ url }) {
     });
 
 
-    
+    // Cloudinary Config
+    const uploadPreset = "ml_default"; // Replace with Cloudinary upload preset
 
     // Handle text inputs
     const onChangeHandler = (event) => {
@@ -28,56 +26,93 @@ export default function AddProduct({ url }) {
         setData((prevData) => ({ ...prevData, [name]: value }));
     };
 
-    // Handle multiple image selection
-    const onImageChange = (event) => {
-        const files = Array.from(event.target.files);
-    
-        if (files.length + images.length > 5) {
-            toast.error("You can only upload up to 5 images!");
-            return;
+    const uploadImageToCloudinary = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            console.log("Requesting Cloudinary Signature from:", `${url}/products/cloudinary-signature`);
+
+            const signatureResponse = await axios.post(`${url}/products/cloudinary-signature`);
+            console.log("Backend Signature Response:", signatureResponse.data);
+
+            const { timestamp, signature, uploadPreset } = signatureResponse.data;
+
+            formData.append("timestamp", timestamp);
+            formData.append("signature", signature);
+            formData.append("upload_preset", uploadPreset); // Fix: Include upload preset
+            formData.append("api_key", import.meta.env.VITE_CLOUDINARY_API_KEY);
+
+            // ✅ Upload to Cloudinary
+            const response = await axios.post(
+                `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+                formData
+            );
+
+            return response.data.secure_url;
+        } catch (error) {
+            console.error("Cloudinary Upload Error:", error);
+            toast.error("Failed to upload image.");
+            return null;
         }
-    
-        setImages((prevImages) => [...prevImages, ...files]);
-    
-        // Reset file input
-        event.target.value = "";
     };
-    
-    
+
+
+
+
+    // Handle multiple image selection
+    const onImageChange = async (event) => {
+        const files = Array.from(event.target.files);
+
+        const uploadedImages = await Promise.all(files.map(async (image) => {
+            const formData = new FormData();
+            formData.append("file", image);
+            formData.append("upload_preset", uploadPreset);
+
+            try {
+                // ✅ Get signed signature from backend
+                const signatureResponse = await axios.post(`${url}/products/cloudinary-signature`);
+                const { timestamp, signature } = signatureResponse.data;
+
+                formData.append("timestamp", timestamp);
+                formData.append("signature", signature);
+                formData.append("api_key", import.meta.env.VITE_CLOUDINARY_API_KEY);
+
+                console.log("Cloudinary API Key:", import.meta.env.VITE_CLOUDINARY_API_KEY);
+
+                // ✅ Upload to Cloudinary
+                const response = await axios.post(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`, formData);
+                return response.data.secure_url;
+            } catch (error) {
+                console.error("Cloudinary Upload Error:", error);
+                toast.error("Failed to upload image.");
+                return null;
+            }
+        }));
+
+        const validImages = uploadedImages.filter(url => url !== null);
+        setImages((prevImages) => [...prevImages, ...validImages]);
+    };
+
+
+
 
     // Remove an image
-    
     const removeImage = (index) => {
-        setImages((prevImages) => {
-            const updatedImages = prevImages.filter((_, i) => i !== index);
-            return [...updatedImages];
-        });
-    
-        setForceUpdate((prev) => prev + 1); // Forces re-render
+        setImages((prevImages) => prevImages.filter((_, i) => i !== index));
     };
-    
-    
-    
-    
-    
-    
-    
 
     // Handle drag end event
     const onDragEnd = (event) => {
         const { active, over } = event;
-        
-        if (active.id !== over.id) {
-            setImages((items) => {
-                const oldIndex = items.findIndex((img) => img.name === active.id);
-                const newIndex = items.findIndex((img) => img.name === over.id);
-                const newItems = [...items];
-                newItems.splice(newIndex, 0, newItems.splice(oldIndex, 1)[0]);                
-                return newItems;
-            });
-        }
+        if (!over || active.id === over.id) return;
+
+        setImages((items) => {
+            const oldIndex = items.indexOf(active.id);
+            const newIndex = items.indexOf(over.id);
+            return arrayMove(items, oldIndex, newIndex);
+        });
     };
-    
 
     // Handle form submission
     const onSubmitHandler = async (event) => {
@@ -96,18 +131,21 @@ export default function AddProduct({ url }) {
         const formData = new FormData();
         formData.append("name", data.name);
         formData.append("description", data.description);
-        formData.append("price", Number(data.price));
+        formData.append("price", data.price);
         formData.append("category", data.category);
 
-        images.forEach((image) => {
-            formData.append("images", image);
+        // Append images as files
+        images.forEach((image, index) => {
+            formData.append(`images`, image); // `images` must match the backend field name
         });
+
+        console.log("Sending product data:", formData);
 
         try {
             const response = await axios.post(`${url}/products/add`, formData, {
                 headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                     "Content-Type": "multipart/form-data",
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
                 },
             });
 
@@ -129,6 +167,7 @@ export default function AddProduct({ url }) {
         }
     };
 
+
     return (
         <div className="add">
             <form className="flex-col" onSubmit={onSubmitHandler}>
@@ -147,19 +186,16 @@ export default function AddProduct({ url }) {
                         type="file"
                         id="image"
                         multiple
-                        accept="image/*"
+                        accept="image/!*"
                         hidden
                     />
 
                     <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                        <SortableContext items={images.map(img => img.name)} strategy={verticalListSortingStrategy}>
-
+                        <SortableContext items={images} strategy={verticalListSortingStrategy}>
                             <div className="image-preview flex gap-5">
-                            {images.map((img, index) => (
-    <SortableItem key={`${img.name}-${index}-${img.lastModified}`} img={img} index={index} removeImage={removeImage} />
-))}
-
-
+                                {images.map((img, index) => (
+                                    <SortableItem key={img} id={img} img={img} index={index} removeImage={removeImage} />
+                                ))}
                             </div>
                         </SortableContext>
                     </DndContext>
@@ -205,13 +241,12 @@ export default function AddProduct({ url }) {
                 <button className="add-btn" type="submit">Add</button>
             </form>
         </div>
-
     );
 }
 
-function SortableItem({ img, index, removeImage }) {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: img.id });
-    
+function SortableItem({ id, img, index, removeImage }) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
@@ -219,14 +254,13 @@ function SortableItem({ img, index, removeImage }) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="image-container">
-            <img src={URL.createObjectURL(img)} alt="preview" />
-            
-            {/* Prevent dragging when clicking delete */}
-            <button 
-                type="button" 
-                className="remove-btn" 
+            <img src={img} alt="preview" />
+
+            <button
+                type="button"
+                className="remove-btn"
                 onClick={(event) => {
-                    event.stopPropagation(); // Stop drag event from interfering
+                    event.stopPropagation();
                     removeImage(index);
                 }}
             >
@@ -236,3 +270,62 @@ function SortableItem({ img, index, removeImage }) {
     );
 }
 
+
+/*
+
+import { useState } from "react";
+
+const UploadProduct = () => {
+    const [image, setImage] = useState(null);
+    const [preview, setPreview] = useState("");
+    const [message, setMessage] = useState("");
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImage(file);
+            setPreview(URL.createObjectURL(file)); // Show image preview
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!image) return alert("Please select an image!");
+
+        const formData = new FormData();
+        formData.append("images", image); // Must match your backend field name
+
+        try {
+            const response = await fetch("http://localhost:4000/products/add", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`// Include auth token if needed
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setMessage("Product uploaded successfully!");
+                console.log("Uploaded Product:", data);
+            } else {
+                setMessage(data.message || "Upload failed!");
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            setMessage("Error uploading file!");
+        }
+    };
+
+    return (
+        <div>
+            <input type="file" accept="image/!*" onChange={handleImageChange} />
+            {preview && <img src={preview} alt="Preview" style={{ width: 200 }} />}
+            <button onClick={handleUpload}>Upload</button>
+            {message && <p>{message}</p>}
+        </div>
+    );
+};
+
+export default UploadProduct;
+*/
