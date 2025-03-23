@@ -4,10 +4,10 @@ import { toast } from "react-toastify";
 
 export default function DeleteButton({ id, name, url, onDelete }) {
     const [deleting, setDeleting] = useState(false);
-    const [toastId, setToastId] = useState(null); // Track active toast for this product
+    const [toastId, setToastId] = useState(null);
 
     const confirmDelete = () => {
-        if (toastId) toast.dismiss(toastId); // Close any existing confirmation toast for this item
+        if (toastId) toast.dismiss(toastId);
 
         const newToastId = toast.warning(
             <div>
@@ -25,35 +25,48 @@ export default function DeleteButton({ id, name, url, onDelete }) {
                     No
                 </button>
             </div>,
-            {
-                autoClose: 5000, // Prevents auto-closing
-                closeOnClick: false,
-            }
+            { autoClose: false, closeOnClick: false }
         );
 
-        setToastId(newToastId); // Store the toast ID for this product
+        setToastId(newToastId);
     };
 
     const removeProduct = async (id, newToastId) => {
+        if (deleting) return;
+
         setDeleting(true);
+        console.log("🟡 Attempting to delete product with ID:", id);
 
         try {
-            const response = await axios.delete(`${url}/products/remove/${id}`);
+            const response = await axios.delete(`${url}/products/remove/${id}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
+
+            console.log("🟢 Backend Response:", response.data);
+
             if (response.data.success) {
-                toast.success("Product removed");
-                onDelete();
+                toast.success("✅ Product and image removed from Cloudinary");
+                onDelete(id); // ✅ Ensure we pass the ID to update the product list
+
+                // ✅ Only dismiss confirmation toast after success
+                toast.dismiss(newToastId);
             } else {
-                toast.error("Failed to remove product");
+                toast.error(response.data.message || "❌ Failed to remove product");
             }
         } catch (error) {
-            toast.error("Server Error");
-            console.error(error);
+            console.error("🔴 Error removing product:", error);
+            toast.error(error.response?.data?.message || "❌ Server Error");
         } finally {
             setDeleting(false);
-            toast.dismiss(newToastId); // Ensure the confirmation toast is dismissed
-            setToastId(null); // Reset toast tracking
         }
     };
+
+
+
+
 
     return (
         <button className="bg-red-600 px-2 text-white rounded-md" onClick={confirmDelete} disabled={deleting}>

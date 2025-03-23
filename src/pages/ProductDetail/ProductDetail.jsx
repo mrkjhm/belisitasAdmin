@@ -4,14 +4,13 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import DeleteButton from '../../components/DeleteButton';
 import './ProductDetail.css';
-import EditProduct from '../../components/EditProduct/EditProduct';
 
-export default function ProductDetails({ url }) {
+export default function ProductDetail({ url }) {
     const { id } = useParams();
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedImage, setSelectedImage] = useState(null); // Track main image
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -19,8 +18,11 @@ export default function ProductDetails({ url }) {
                 const response = await axios.get(`${url}/products/${id}`);
                 if (response.data.success) {
                     setProduct(response.data.data);
-                    // Directly set the first Cloudinary image as default
-                    setSelectedImage(response.data.data.images[0]);
+
+                    // ✅ Correctly access the first image URL
+                    if (response.data.data.images?.length > 0) {
+                        setSelectedImage(response.data.data.images[0].url);
+                    }
                 } else {
                     toast.error("Product not found");
                 }
@@ -35,7 +37,6 @@ export default function ProductDetails({ url }) {
         fetchProduct();
     }, [id, url]);
 
-
     const handleDelete = () => {
         navigate('/list');
     };
@@ -45,41 +46,49 @@ export default function ProductDetails({ url }) {
     if (!product) return <p>Product not found.</p>;
 
     return (
-        <>
-            <div className="product-detail grid md:grid-cols-2 grid-cols-1 gap-10">
-                <div>
-                    {/* Large Main Image */}
-                    <div className="main-image">
+        <div className="product-detail grid md:grid-cols-2 grid-cols-1 gap-10">
+            <div>
+                {/* ✅ Correctly check and display the main image */}
+                <div className="main-image  border">
+                    {selectedImage ? (
                         <img src={selectedImage} alt={product.name} className="large-image" />
-                    </div>
-
-                    {/* Small Thumbnail Images (Hide Active Image) */}
-                    {/* Small Thumbnail Images (Hide Active Image) */}
-                    <div className="thumbnail-gallery">
-                        {product.images
-                            .filter(image => image !== selectedImage) // Exclude active image
-                            .map((image, index) => (
-                                <img
-                                    key={index}
-                                    src={image} // Use Cloudinary URL directly
-                                    alt={`Thumbnail ${index + 1}`}
-                                    className="thumbnail"
-                                    onClick={() => setSelectedImage(image)}
-                                />
-                            ))}
-                    </div>
-
+                    ) : (
+                        <p>No image available</p>
+                    )}
                 </div>
 
-                <div className='text-detail space-y-3'>
-                    <h1 className='font-bold text-5xl'>{product.name}</h1>
-                    <p className='text-xl'>Description: {product.description}</p>
-                    <p className='font-bold text-2xl'>₱ {product.price}</p>
-                    <p>Category: {product.category}</p>
+                {/* ✅ Correctly display thumbnails */}
+                <div className="thumbnail-gallery">
+                    {product.images && product.images.length > 1 &&
+                        product.images
+                            .filter(img => img.url !== selectedImage) // Exclude active image
+                            .map((img, index) => (
+                                <img
+                                    key={index}
+                                    src={img.url} // ✅ Access `url` properly
+                                    alt={`Thumbnail ${index + 1}`}
+                                    className="thumbnail  border"
+                                    onClick={() => setSelectedImage(img.url)}
+                                />
+                            ))
+                    }
+                </div>
+            </div>
 
+            <div className='text-detail space-y-3'>
+                <h1 className='font-bold text-5xl pb-3'>{product.name}</h1>
+                <p className='font-bold text-2xl'> <span className="bg-[#6d6d6d] px-5  py-2 rounded text-white">₱ {product.price}</span></p>
+                <p className='text-xl'><span className="text-sm">Details:</span> <br/> {product.description}</p>
+
+                <p><span className="text-sm">Category:</span> <br/> {product.category?.name || "No Category"}</p>
+                <p><span className="text-sm">Code:</span> <br/> <span className="font-bold">{product.code}</span></p>
+                <div className="flex gap-2">
+                    <button className="update-btn" onClick={() => navigate(`/edit-product/${product._id}`)}>
+                        <i className="ri-file-edit-fill"></i>
+                    </button>
                     <DeleteButton id={product._id} name={product.name} url={url} onDelete={handleDelete} />
                 </div>
             </div>
-        </>
+        </div>
     );
 }

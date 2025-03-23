@@ -9,34 +9,44 @@ import Search from '../../components/Search/Search';
 
 export default function ProductList({ url }) {
 
+    const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("all");
     const [searchTerm, setSearchTerm] = useState('')
+    const [deleting, setDeleting] = useState({});
+    const [filteredProducts, setFilteredProducts] = useState([]);
+
 
     const navigate = useNavigate();
 
-    const [list, setList] = useState([]);
-    const [deleting, setDeleting] = useState({});
 
-    const [selectedCategory, setSelectedCategory] = useState("all");
 
 
     const handleClick = (id) => {
         navigate(`/edit-product/${id}`)
     }
 
-    const handleDelete = (id) => {
-        // Remove the deleted product from the list immediately
-        setList((prevList) => prevList.filter((item) => item._id !== id));
+    const handleDelete = async (id) => {
+        console.log(`🟠 Refreshing product list after deleting ID: ${id}`);
+
+        await fetchProducts(); // ✅ Ensure fresh data from the backend
+
+        // ✅ If no products left, navigate back to previous page (if pagination exists)
+        if (products.length === 1) {
+            navigate("/products");  // Change this path if you have pagination
+        }
     };
 
 
+
+
     // Fetch product list
-    const fetchList = async () => {
+    const fetchProducts = async () => {
         try {
             const response = await axios.get(`${url}/products/`);
-            console.log(response.data);
-
             if (response.data.success) {
-                setList(response.data.data);
+                setProducts(response.data.data);
+                setFilteredProducts(response.data.data);  // ✅ Ensure filteredProducts is updated
             } else {
                 toast.error("Error fetching products");
             }
@@ -45,6 +55,7 @@ export default function ProductList({ url }) {
             console.error(error);
         }
     };
+
 
     const confirmDelete = (id, name) => {
         const toastId = toast.warning(
@@ -75,29 +86,62 @@ export default function ProductList({ url }) {
         setDeleting((prev) => ({ ...prev, [id]: true })); // Mark as deleting
 
         try {
-            const response = await axios.delete(`${url}/products/remove/${id}`);
+            const response = await axios.delete(`${url}/products/remove/${id}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
+
             if (response.data.success) {
-                toast.success("Product removed");
-                setList((prevList) => prevList.filter((item) => item._id !== id));
+                toast.success("✅ Product and images removed from Cloudinary");
+
+                // ✅ Re-fetch products to update UI
+                await fetchProducts();
+
+                toast.dismiss(toastId);
             } else {
-                toast.error("Failed to remove product");
+                toast.error(response.data.message || "❌ Failed to remove product");
             }
         } catch (error) {
-            toast.error("Server Error");
-            console.error(error);
+            toast.error(error.response?.data?.message || "❌ Server Error");
         } finally {
             setDeleting((prev) => ({ ...prev, [id]: false })); // Reset deleting state
-            toast.dismiss(toastId); // Dismiss only the confirmation toast
         }
     };
 
-    useEffect(() => {
-        fetchList();
-    }, []);
 
-    const filteredList = selectedCategory === "all"
-        ? list
-        : list.filter((item) => item.category === selectedCategory);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get(`${url}/categories`);
+            if (response.data.success) {
+                setCategories(response.data.categories);
+
+            } else {
+                toast.error("Error fetching categories");
+            }
+        } catch (error) {
+            toast.error("Failed to load categories");
+            console.error(error);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchProducts();
+        fetchCategories();
+    }, []); // ✅ Fetch data when component mounts
+
+    useEffect(() => {
+        setFilteredProducts(products);
+    }, [products]); // ✅ Update filtered list when `products` change
+
+
+    const finalProducts = selectedCategory === "all"
+        ? filteredProducts
+        : filteredProducts.filter((product) => product.category?._id === selectedCategory);
+
 
 
 
@@ -115,52 +159,55 @@ export default function ProductList({ url }) {
             <div className="list add flex-col">
 
                 <p className='text-2xl font-bold'>Product List</p>
-                <div className='md:flex  justify-between items-center'>
+                <div className='md:flex justify-between items-center'>
 
+                    <div className="md:mb-0 mb-2">
+                        <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} setList={setFilteredProducts} url={url} />
 
-                    <div className='md:mb-0 mb-3'>
-                    <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} setList={setList} url={url} />
-
-                        {/* <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} /> */}
                     </div>
                     <div>
+
                         <select
                             className="category-filter"
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
                         >
                             <option value="all">All Categories</option>
-                            {Array.from(new Set(list.map((item) => item.category))).map((category, index) => (
-                                <option key={index} value={category}>{category}</option>
+                            {categories.map((category) => (
+                                <option key={category._id} value={category._id}>{category.name}</option>
                             ))}
                         </select>
                     </div>
 
+
+                    {/* ✅ Use categories from backend */}
+
                 </div>
                 <div className="list-table">
                     <div className="list-table-format title">
-                        <b>Images</b>
-                        <b>Name</b>
-                        <b>Category</b>
+                        <b>Image</b>
+                        <b>Product Name</b>
+                        <b>Code</b>
                         <b>Price</b>
                         <b>Action</b>
                     </div>
                 </div>
-                {filteredList.length > 0 ? (
-                    filteredList.map((item, index) => (
-                        <div key={index} className="image-gallery list-table-format hover:bg-[#ececec]">
+                {finalProducts.length > 0 ? (
+                    finalProducts.map((item) => (
+                        <div key={item._id} className="image-gallery list-table-format hover:bg-[#ececec]">
                             {item.images?.length > 0 && (
                                 <img
-                                    src={item.images[0]}
+                                    src={item.images[0]?.url} // ✅ Extract the 'url' field
                                     alt={item.name}
                                     className="product-image"
-                                    onError={(e) => (e.target.style.display = 'none')}
+                                    onError={(e) => (e.target.style.display = 'none')} // Hide broken images
                                 />
                             )}
-                            <p className="cursor-pointer hover:font-semibold" onClick={() => navigate(`/product/${item._id}`)}>
+
+                            <p className="cursor-pointer font-semibold hover:font-bold" onClick={() => navigate(`/product/${item._id}`)}>
                                 {item.name}
                             </p>
-                            <p>{item.category}</p>
+                            <p>{item.code}</p>
                             <p><span className="sm:hidden flex">₱ </span> {item.price}</p>
                             <div className="flex gap-2 action-button lg:flex-row sm:flex-col xs:flex-row">
                                 <button className="update-btn" onClick={() => navigate(`/edit-product/${item._id}`)}>
@@ -169,16 +216,22 @@ export default function ProductList({ url }) {
                                 <button className="update-btn" onClick={() => navigate(`/product/${item._id}`)}>
                                     <i className="ri-file-search-line"></i>
                                 </button>
-                                <DeleteButton id={item._id} name={item.name} url={url} onDelete={() => handleDelete(item._id)} />
+                                <DeleteButton
+                                    id={item._id}
+                                    name={item.name}
+                                    url={url}
+                                    onDelete={() => fetchProducts()} // ✅ Ensure UI refresh after deletion
+                                />
+
                             </div>
                         </div>
                     ))
                 ) : (
-                    // ✅ Show message when no products are found
                     <div className="text-center text-gray-500 text-xl py-10">
                         No products found.
                     </div>
                 )}
+
 
 
 

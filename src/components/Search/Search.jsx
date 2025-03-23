@@ -8,13 +8,15 @@ export default function Search({ searchTerm, setSearchTerm, setList, url }) {
     const fetchProduct = async () => {
         try {
             let response;
-            
+
             if (!searchTerm) {
-                // If search is empty, fetch all products
+                // Fetch all products if no search term
                 response = await axios.get(`${url}/products`);
             } else {
-                // Otherwise, fetch filtered search results
-                response = await axios.get(`${url}/products/search?search=${searchTerm}`);
+                // Fetch products by name or code
+                response = await axios.get(`${url}/products/search`, {
+                    params: { search: searchTerm }
+                });
             }
 
             if (response.data.success) {
@@ -27,6 +29,7 @@ export default function Search({ searchTerm, setSearchTerm, setList, url }) {
             console.error(error);
         }
     };
+
 
     useEffect(() => {
         fetchProduct();
@@ -42,7 +45,7 @@ export default function Search({ searchTerm, setSearchTerm, setList, url }) {
                 <i className="ri-search-line"></i>
                 <input
                     type="text"
-                    placeholder='Search Product'
+                    placeholder='Search Product/Code'
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                     className='focus:outline-0'

@@ -28,7 +28,7 @@ function App() {
     setUser({ access: null });
   };
 
-  const url = "https://belisitasapi.onrender.com";
+  const url = import.meta.env.VITE_URL;
 
   return (
     <>
