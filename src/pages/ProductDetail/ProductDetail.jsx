@@ -83,7 +83,7 @@ export default function ProductDetail({ url }) {
                 <p><span className="text-sm">Category:</span> <br/> {product.category?.name || "No Category"}</p>
                 <p><span className="text-sm">Code:</span> <br/> <span className="font-bold">{product.code}</span></p>
                 <div className="flex gap-2">
-                    <button className="update-btn" onClick={() => navigate(`/edit-product/${product._id}`)}>
+                    <button className="update-btn" onClick={() => navigate(`/edit-product/${product.name}`)}>
                         <i className="ri-file-edit-fill"></i>
                     </button>
                     <DeleteButton id={product._id} name={product.name} url={url} onDelete={handleDelete} />

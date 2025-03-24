@@ -35,7 +35,6 @@ export default function DeleteButton({ id, name, url, onDelete }) {
         if (deleting) return;
 
         setDeleting(true);
-        console.log("🟡 Attempting to delete product with ID:", id);
 
         try {
             const response = await axios.delete(`${url}/products/remove/${id}`, {
@@ -45,20 +44,19 @@ export default function DeleteButton({ id, name, url, onDelete }) {
                 }
             });
 
-            console.log("🟢 Backend Response:", response.data);
 
             if (response.data.success) {
-                toast.success("✅ Product and image removed from Cloudinary");
+                toast.success("Product and image removed from Cloudinary");
                 onDelete(id); // ✅ Ensure we pass the ID to update the product list
 
                 // ✅ Only dismiss confirmation toast after success
                 toast.dismiss(newToastId);
             } else {
-                toast.error(response.data.message || "❌ Failed to remove product");
+                toast.error(response.data.message || "Failed to remove product");
             }
         } catch (error) {
-            console.error("🔴 Error removing product:", error);
-            toast.error(error.response?.data?.message || "❌ Server Error");
+            console.error("Error removing product:", error);
+            toast.error(error.response?.data?.message || "Server Error");
         } finally {
             setDeleting(false);
         }

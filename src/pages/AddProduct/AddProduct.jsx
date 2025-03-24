@@ -31,10 +31,8 @@ export default function AddProduct({ url }) {
         formData.append("file", file);
 
         try {
-            console.log("Requesting Cloudinary Signature from:", `${url}/products/cloudinary-signature`);
 
             const signatureResponse = await axios.post(`${url}/products/cloudinary-signature`);
-            console.log("Backend Signature Response:", signatureResponse.data);
 
             const { timestamp, signature, uploadPreset } = signatureResponse.data;
 
@@ -58,8 +56,6 @@ export default function AddProduct({ url }) {
     };
 
 
-
-
     // Handle multiple image selection
     const onImageChange = (event) => {
         const files = Array.from(event.target.files);
@@ -73,16 +69,10 @@ export default function AddProduct({ url }) {
     };
 
 
-
-
-
     // Remove an image
     const removeImage = (index) => {
         setImages((prevImages) => prevImages.filter((_, i) => i !== index));
     };
-
-    // Handle drag end event
-
 
     // Handle form submission
     const onSubmitHandler = async (event) => {
@@ -141,7 +131,6 @@ export default function AddProduct({ url }) {
         const fetchCategories = async () => {
             try {
                 const response = await axios.get(`${url}/categories`);
-                console.log("Fetched Categories:", response.data); // Debugging
                 setCategories(response.data.categories || []); // Ensure it's an array
             } catch (error) {
                 console.error("Failed to fetch categories:", error);

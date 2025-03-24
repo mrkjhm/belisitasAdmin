@@ -194,7 +194,7 @@ export default function ProductList({ url }) {
                 </div>
                 {finalProducts.length > 0 ? (
                     finalProducts.map((item) => (
-                        <div key={item._id} className="image-gallery list-table-format hover:bg-[#ececec]">
+                        <div key={item.name} className="image-gallery list-table-format hover:bg-[#ececec]">
                             {item.images?.length > 0 && (
                                 <img
                                     src={item.images[0]?.url} // ✅ Extract the 'url' field
@@ -204,16 +204,16 @@ export default function ProductList({ url }) {
                                 />
                             )}
 
-                            <p className="cursor-pointer font-semibold hover:font-bold" onClick={() => navigate(`/product/${item._id}`)}>
+                            <p className="cursor-pointer font-semibold hover:font-bold" onClick={() => navigate(`/product/${item.name}`)}>
                                 {item.name}
                             </p>
                             <p>{item.code}</p>
                             <p><span className="sm:hidden flex">₱ </span> {item.price}</p>
                             <div className="flex gap-2 action-button lg:flex-row sm:flex-col xs:flex-row">
-                                <button className="update-btn" onClick={() => navigate(`/edit-product/${item._id}`)}>
+                                <button className="update-btn" onClick={() => navigate(`/edit-product/${item.name}`)}>
                                     <i className="ri-file-edit-fill"></i>
                                 </button>
-                                <button className="update-btn" onClick={() => navigate(`/product/${item._id}`)}>
+                                <button className="update-btn" onClick={() => navigate(`/product/${item.name}`)}>
                                     <i className="ri-file-search-line"></i>
                                 </button>
                                 <DeleteButton

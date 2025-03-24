@@ -26,9 +26,6 @@ export default function EditProduct({ url }) {
         try {
             const response = await axios.get(`${url}/products/${id}`);
 
-            console.log("🛠️ API Response:", response.data);
-
-
             if (response.data.success) {
                 const productData = response.data.data;
 
@@ -49,8 +46,6 @@ export default function EditProduct({ url }) {
     // Fetch product data
     useEffect(() => {
         fetchProduct();
-
-
 
         // Fetch categories from backend
         const fetchCategories = async () => {
@@ -82,8 +77,6 @@ export default function EditProduct({ url }) {
     const handleImageChange = (e) => {
         const newImages = Array.from(e.target.files);
 
-        console.log("🛠️ Selected Files:", e.target.files);
-
         if (selectedImages.length + product.images.length + newImages.length > 5) {
             toast.error(`You can only upload up to 5 images.`);
             return;
@@ -96,10 +89,8 @@ export default function EditProduct({ url }) {
 
 
 
-
     const handleUploadImages = async () => {
         if (selectedImages.length === 0) {
-            console.log("⚠️ No images selected!");
             return;
         }
 
@@ -113,15 +104,13 @@ export default function EditProduct({ url }) {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            console.log("✅ Upload response:", response.data);
-
             if (response.data.success) {
-                toast.success("✅ Images uploaded successfully!");
+                toast.success("Images uploaded successfully!");
 
                 // ✅ Fetch updated product data
                 fetchProduct();
             } else {
-                toast.error("❌ Failed to upload images.");
+                toast.error("Failed to upload images.");
             }
         } catch (error) {
             console.error("❌ Error uploading images:", error);
@@ -134,19 +123,9 @@ export default function EditProduct({ url }) {
 
 
 
-
-
-
-
-
-
-
-
     const handleRemoveSelectedImage = (index) => {
         setSelectedImages((prev) => prev.filter((_, i) => i !== index));
     };
-
-
 
 
 
@@ -159,7 +138,7 @@ export default function EditProduct({ url }) {
             });
 
             if (response.data.success) {
-                toast.success("✅ Image deleted successfully!");
+                toast.success("Image deleted successfully!");
 
                 // ✅ Update product state to remove deleted image
                 setProduct((prev) => ({
@@ -167,21 +146,13 @@ export default function EditProduct({ url }) {
                     images: prev.images.filter((img) => img.public_id !== publicId),
                 }));
             } else {
-                toast.error(`❌ Failed to delete image: ${response.data.message}`);
+                toast.error(`Failed to delete image: ${response.data.message}`);
             }
         } catch (error) {
-            console.error("❌ Error deleting image:", error);
-            toast.error("❌ Error deleting image. Please try again.");
+            console.error("Error deleting image:", error);
+            toast.error("Error deleting image. Please try again.");
         }
     };
-
-
-
-
-
-
-
-
 
 
     const handleSubmit = async (e) => {
@@ -207,7 +178,7 @@ export default function EditProduct({ url }) {
             });
 
             if (response.data.success) {
-                toast.success("✅ Product updated successfully");
+                toast.success("Product updated successfully");
 
                 // ✅ Clear selected images after update
                 setSelectedImages([]);
@@ -215,21 +186,15 @@ export default function EditProduct({ url }) {
                 // ✅ Navigate after everything is updated
                 navigate("/list");
             } else {
-                toast.error("❌ Update failed");
+                toast.error("Update failed");
             }
         } catch (error) {
-            console.error("❌ Error updating product:", error);
-            toast.error("❌ Server error");
+            console.error("Error updating product:", error);
+            toast.error("Server error");
         } finally {
             setLoading(false);
         }
     };
-
-
-
-
-
-
 
 
     return (
