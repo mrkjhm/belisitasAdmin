@@ -60,7 +60,7 @@ export default function ProductList({ url }) {
     const confirmDelete = (id, name) => {
         const toastId = toast.warning(
             <div>
-                <p className='confirm-title'>Are you sure you want to delete <b>{name}</b>?</p>
+                <p className='confirm-title'>Are you sure you want to delete the product <b>{name}</b>?</p>
                 <button
                     className='confirm-btn-yes'
                     onClick={() => removeProduct(id, toastId)}

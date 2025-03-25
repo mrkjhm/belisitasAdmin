@@ -19,10 +19,14 @@ export default function Sidebar() {
                         <img src={assets.order_icon} alt="" />
                         <p className=''>List Items</p>
                     </NavLink>
-                    <NavLink to="/orders" className='sidebar-option'>
+                    <NavLink to="/category" className='sidebar-option'>
+                        <img src={assets.add_icon} alt="" />
+                        <p className=''>Categories</p>
+                    </NavLink>
+                    {/*<NavLink to="/orders" className='sidebar-option'>
                         <img className='' src={assets.order_icon} alt="" />
                         <p className=''>Orders</p>
-                    </NavLink>
+                    </NavLink>*/}
 
                 </div>
             </div>

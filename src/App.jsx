@@ -10,6 +10,7 @@ import Orders from './pages/Orders/Orders';
 import EditProduct from './components/EditProduct/EditProduct';
 import Login from './pages/Login/Login';
 import Logout from './pages/Logout/Logout';
+import Category from "./pages/Category/Category.jsx";
 
 import { UserProvider } from './Context/UserContext';
 import Home from './pages/Home/Home';
@@ -54,6 +55,7 @@ function App() {
                 {/* If user is logged in, redirect /login to Home */}
                 <Route path="/login" element={<Navigate to="/" />} />
 
+                <Route path="/category" element={<Category url={url} />} />
                 <Route path="/" element={<Home url={url} />} />
                 <Route path="/logout" element={<Logout url={url} />} />
                 <Route path="/add" element={<AddProduct url={url} />} />

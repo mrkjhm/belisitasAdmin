@@ -25,7 +25,7 @@ export default function DeleteButton({ id, name, url, onDelete }) {
                     No
                 </button>
             </div>,
-            { autoClose: false, closeOnClick: false }
+            { autoClose: true, closeOnClick: false }
         );
 
         setToastId(newToastId);
