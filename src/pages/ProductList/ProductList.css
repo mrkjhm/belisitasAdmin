@@ -78,6 +78,13 @@
     border-radius: 5px;
 }
 
+.product-detail-11 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 equal columns */
+    gap: 20px; /* Spacing between columns */
+
+}
+
 @media (max-width:600px) {
     .list-table-format {
         grid-template-columns: 1fr 3fr 1fr;
